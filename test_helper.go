@@ -55,3 +55,22 @@ func CompareProperties(a, b interface{}, properties []string) (bool, error) {
 
 	return true, nil
 }
+
+func ComparePropertiesWithFormat(a, b interface{}, properties map[string]func(interface{}) string) (bool, error) {
+	aValueOf := reflect.ValueOf(a)
+	bValueOf := reflect.ValueOf(b)
+
+	for property, propFormat := range properties {
+		aValue := reflect.Indirect(aValueOf).FieldByName(property).Interface()
+		bValue := reflect.Indirect(bValueOf).FieldByName(property).Interface()
+
+		aFormatted := propFormat(aValue)
+		bFormatted := propFormat(bValue)
+
+		if aFormatted != bFormatted {
+			return false, errors.New(fmt.Sprintf("%s not equal", property))
+		}
+	}
+
+	return true, nil
+}
